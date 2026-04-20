@@ -430,3 +430,26 @@ class OpenMetadataClient:
             "column_name": column_name,
             "description": description,
         }
+
+    def get_available_governance_tags(self) -> Dict[str, Any]:
+        """Return available governance tags so agents can use valid FQNs."""
+        payload = self._get("/api/v1/tags", params={"limit": 1000})
+        data = payload.get("data", []) or []
+
+        tags: List[Dict[str, Any]] = []
+        for item in data:
+            fqn = item.get("fullyQualifiedName")
+            if not fqn:
+                continue
+            tags.append(
+                {
+                    "fqn": fqn,
+                    "name": item.get("name") or fqn,
+                    "description": item.get("description") or "",
+                }
+            )
+
+        return {
+            "returned_count": len(tags),
+            "tags": tags,
+        }

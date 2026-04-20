@@ -15,6 +15,7 @@ Minimal MCP server for hackathon use-cases that lets LLM agents discover data as
 
 - Step 1: Search & Discover (`search_data_assets`, `get_table_details`)
 - Step 2: Audit & Reason (`analyze_table_for_pii`)
+- Step 2.5: Verify Rules (`get_available_governance_tags`)
 - Step 3: Document (`update_column_description`)
 - Step 4: Act & Remediate (`apply_pii_tag_to_column`)
 

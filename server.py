@@ -272,5 +272,17 @@ def update_column_description(
         return _error_payload(err)
 
 
+@mcp.tool()
+def get_available_governance_tags() -> Dict[str, Any]:
+    """
+    Use this tool to retrieve a list of all valid governance tags in the system. Always use this to find the exact tag FQN before applying a tag to a column.
+    """
+    try:
+        result = _get_client().get_available_governance_tags()
+        return {"ok": True, **result}
+    except OpenMetadataClientError as err:
+        return _error_payload(err)
+
+
 if __name__ == "__main__":
     mcp.run()
