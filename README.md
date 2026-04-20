@@ -55,23 +55,18 @@ Audit, Document & Remediate: Automatically suggest descriptions for undocumented
    OPENMETADATA_JWT_TOKEN=your-token-here
    ```
 
-## Run the MCP Server
-
-```bash
-mcp run server.py
-```
-
 ## Connecting to Claude Desktop
 
-To use this MCP server from Claude Desktop, add it to your `claude_desktop_config.json`.
+To use this MCP server from Claude Desktop, add this MCP server entry to your `claude_desktop_config.json`.
 
-On macOS, this file is typically located at:
+Config file locations:
 
 ```text
-~/Library/Application Support/Claude/claude_desktop_config.json
+Mac: ~/Library/Application Support/Claude/claude_desktop_config.json
+Windows: %APPDATA%\Claude\claude_desktop_config.json
 ```
 
-Use the following config (replace `/absolute/path/to/server.py`):
+Use the following configuration:
 
 ```json
 {
@@ -82,29 +77,7 @@ Use the following config (replace `/absolute/path/to/server.py`):
         "run",
         "mcp",
         "run",
-        "/absolute/path/to/server.py"
-      ],
-      "env": {
-        "OPENMETADATA_HOST": "http://localhost:8585",
-        "OPENMETADATA_JWT_TOKEN": "your-token-here"
-      }
-    }
-  }
-}
-```
-
-If `uv` is not installed, you can use Python directly:
-
-```json
-{
-  "mcpServers": {
-    "openmetadata": {
-      "command": "python3",
-      "args": [
-        "-m",
-        "mcp",
-        "run",
-        "/absolute/path/to/server.py"
+        "/ABSOLUTE/PATH/TO/YOUR/openmetadata-mcp-server/server.py"
       ],
       "env": {
         "OPENMETADATA_HOST": "http://localhost:8585",
@@ -117,9 +90,14 @@ If `uv` is not installed, you can use Python directly:
 
 ### Demo Prompts for Judges
 
-- "Find candidate customer-related tables. Analyze them for likely untagged PII, verify available governance tags, and apply the most appropriate tag to any missing sensitive column."
-- "Review one ecommerce table for undocumented columns. Propose concise descriptions and update the missing ones automatically."
-- "Run a full governance pass: discover relevant tables, audit for missing PII tags and descriptions, check valid tag FQNs first, then remediate what you can."
+- Basic Discovery: "Search for tables related to 'users' or 'customers' in OpenMetadata. Please analyze their columns and let me know if there is any Personally Identifiable Information (PII) that is currently missing a governance tag."
+- Autonomous Governance Workflow: "Please audit the tables in ecommerce_db (or any target database). I need you to do two things automatically: 1) Infer and update the descriptions for any columns that are undocumented. 2) Identify any untagged PII columns, check the available governance tags in the system, and apply the correct tags to them."
+
+## Run the MCP Server
+
+```bash
+mcp run server.py
+```
 
 ## Tool Intents
 
