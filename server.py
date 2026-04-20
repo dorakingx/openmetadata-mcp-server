@@ -203,5 +203,74 @@ def apply_pii_tag_to_column(
         return _error_payload(err)
 
 
+@mcp.tool()
+def update_column_description(
+    identifier: str, column_name: str, description: str
+) -> Dict[str, Any]:
+    """
+    Use this tool to add or update descriptions for columns that are undocumented or poorly documented, based on your understanding of the schema.
+
+    Args:
+        identifier: Table fully qualified name (preferred) or table UUID.
+        column_name: Exact top-level column name to update.
+        description: Proposed human-readable column description.
+    """
+    if not identifier.strip():
+        return {
+            "ok": False,
+            "error": "identifier must not be empty.",
+            "hint": "Provide a table FQN (recommended) or UUID.",
+            "status_code": None,
+        }
+    if not column_name.strip():
+        return {
+            "ok": False,
+            "error": "column_name must not be empty.",
+            "hint": "Provide an exact top-level column name.",
+            "status_code": None,
+        }
+    if not description.strip():
+        return {
+            "ok": False,
+            "error": "description must not be empty.",
+            "hint": "Provide a meaningful description inferred from table context.",
+            "status_code": None,
+        }
+
+    try:
+        client = _get_client()
+        table = client._resolve_table(identifier.strip())
+        table_id = table.get("id")
+        if not table_id:
+            return {
+                "ok": False,
+                "error": "Could not resolve table ID from identifier.",
+                "hint": "Verify the table FQN/UUID and try again.",
+                "status_code": None,
+            }
+
+        action_result = client.update_column_description(
+            table_id=table_id,
+            column_name=column_name.strip(),
+            description=description.strip(),
+        )
+        return {
+            "ok": True,
+            "message": action_result.get(
+                "message", "Column description update completed."
+            ),
+            "table": {
+                "id": table_id,
+                "fqn": table.get("fullyQualifiedName"),
+                "name": table.get("name"),
+            },
+            "column_name": column_name.strip(),
+            "description": description.strip(),
+            "result": action_result,
+        }
+    except OpenMetadataClientError as err:
+        return _error_payload(err)
+
+
 if __name__ == "__main__":
     mcp.run()

@@ -9,12 +9,16 @@ Minimal MCP server for hackathon use-cases that lets LLM agents discover data as
 - `get_table_lineage`: Fetch upstream/downstream dependencies for a table.
 - `analyze_table_for_pii`: Provide governance-focused schema context for LLM PII audit reasoning.
 - `apply_pii_tag_to_column`: Apply a governance tag to a table column for automated remediation.
+- `update_column_description`: Add or update undocumented column descriptions inferred by the LLM.
 
 ## Autonomous Agentic Governance Workflow
 
 - Step 1: Search & Discover (`search_data_assets`, `get_table_details`)
 - Step 2: Audit & Reason (`analyze_table_for_pii`)
-- Step 3: Act & Remediate (`apply_pii_tag_to_column`)
+- Step 3: Document (`update_column_description`)
+- Step 4: Act & Remediate (`apply_pii_tag_to_column`)
+
+Audit, Document & Remediate: Automatically suggest descriptions for undocumented columns and apply governance tags.
 
 ## Prerequisites
 

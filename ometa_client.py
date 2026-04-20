@@ -394,3 +394,39 @@ class OpenMetadataClient:
             "column_name": column_name,
             "tag_fqn": tag_fqn,
         }
+
+    def update_column_description(
+        self, table_id: str, column_name: str, description: str
+    ) -> Dict[str, Any]:
+        """Add or update a top-level table column description via JSON Patch."""
+        table = self._get(f"/api/v1/tables/{table_id}")
+        columns = table.get("columns", []) or []
+
+        target_index: Optional[int] = None
+        for idx, column in enumerate(columns):
+            if column.get("name") == column_name:
+                target_index = idx
+                break
+
+        if target_index is None:
+            raise OpenMetadataClientError(
+                message=f"Column '{column_name}' was not found in table '{table_id}'.",
+                hint="Use an exact top-level column name from get_table_details output.",
+            )
+
+        patch_payload = [
+            {
+                "op": "add",
+                "path": f"/columns/{target_index}/description",
+                "value": description,
+            }
+        ]
+
+        self._patch(f"/api/v1/tables/{table_id}", patch_payload)
+        return {
+            "status": "updated",
+            "message": f"Updated description for column '{column_name}'.",
+            "table_id": table_id,
+            "column_name": column_name,
+            "description": description,
+        }
