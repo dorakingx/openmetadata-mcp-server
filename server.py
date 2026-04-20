@@ -143,5 +143,65 @@ def analyze_table_for_pii(identifier: str) -> Dict[str, Any]:
         return _error_payload(err)
 
 
+@mcp.tool()
+def apply_pii_tag_to_column(
+    identifier: str, column_name: str, tag_fqn: str = "PII.Sensitive"
+) -> Dict[str, Any]:
+    """
+    Apply a governance tag to a top-level column for remediation workflows.
+
+    Args:
+        identifier: Table fully qualified name (preferred) or table UUID.
+        column_name: Exact top-level column name to update.
+        tag_fqn: Tag fully qualified name to apply (default: PII.Sensitive).
+    """
+    if not identifier.strip():
+        return {
+            "ok": False,
+            "error": "identifier must not be empty.",
+            "hint": "Provide a table FQN (recommended) or UUID.",
+            "status_code": None,
+        }
+    if not column_name.strip():
+        return {
+            "ok": False,
+            "error": "column_name must not be empty.",
+            "hint": "Provide an exact top-level column name.",
+            "status_code": None,
+        }
+
+    try:
+        client = _get_client()
+        table = client._resolve_table(identifier.strip())
+        table_id = table.get("id")
+        if not table_id:
+            return {
+                "ok": False,
+                "error": "Could not resolve table ID from identifier.",
+                "hint": "Verify the table FQN/UUID and try again.",
+                "status_code": None,
+            }
+
+        action_result = client.apply_column_tag(
+            table_id=table_id,
+            column_name=column_name.strip(),
+            tag_fqn=tag_fqn.strip() or "PII.Sensitive",
+        )
+        return {
+            "ok": True,
+            "message": action_result.get("message", "Tag operation completed."),
+            "table": {
+                "id": table_id,
+                "fqn": table.get("fullyQualifiedName"),
+                "name": table.get("name"),
+            },
+            "column_name": column_name.strip(),
+            "tag_fqn": tag_fqn.strip() or "PII.Sensitive",
+            "result": action_result,
+        }
+    except OpenMetadataClientError as err:
+        return _error_payload(err)
+
+
 if __name__ == "__main__":
     mcp.run()

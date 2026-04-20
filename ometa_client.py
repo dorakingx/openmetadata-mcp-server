@@ -77,6 +77,53 @@ class OpenMetadataClient:
 
         return payload
 
+    def _patch(self, path: str, payload: List[Dict[str, Any]]) -> Dict[str, Any]:
+        url = f"{self.host}{path}"
+        headers = {"Content-Type": "application/json-patch+json"}
+
+        try:
+            response = self.session.patch(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=self.timeout_seconds,
+            )
+        except requests.exceptions.ConnectionError as exc:
+            raise OpenMetadataClientError(
+                message=f"Could not connect to OpenMetadata at '{self.host}'.",
+                hint="Ensure OPENMETADATA_HOST is correct and the server is running.",
+            ) from exc
+        except requests.exceptions.Timeout as exc:
+            raise OpenMetadataClientError(
+                message=f"Patch request to OpenMetadata timed out after {self.timeout_seconds}s.",
+                hint="Try again or verify OpenMetadata server health.",
+            ) from exc
+        except requests.RequestException as exc:
+            raise OpenMetadataClientError(
+                message=f"Unexpected patch error while calling '{url}': {exc}",
+                hint="Check network connectivity and OpenMetadata availability.",
+            ) from exc
+
+        if response.status_code >= 400:
+            hint = self._status_hint(response.status_code)
+            detail = self._extract_error_detail(response)
+            if response.status_code == 400:
+                hint = (
+                    "Validate column/tag payload. The tag may not exist; verify tag FQN "
+                    f"'{payload[0].get('value', {}).get('tagFQN', '')}'."
+                )
+            raise OpenMetadataClientError(
+                message=f"OpenMetadata API returned HTTP {response.status_code}: {detail}",
+                hint=hint,
+                status_code=response.status_code,
+            )
+
+        try:
+            return response.json()
+        except ValueError:
+            # Some patch responses can be empty; return a minimal success payload.
+            return {"status": "success"}
+
     @staticmethod
     def _extract_error_detail(response: requests.Response) -> str:
         try:
@@ -284,4 +331,66 @@ class OpenMetadataClient:
             },
             "columns": governance_columns,
             "column_count": len(governance_columns),
+        }
+
+    def apply_column_tag(
+        self, table_id: str, column_name: str, tag_fqn: str = "PII.Sensitive"
+    ) -> Dict[str, Any]:
+        """Apply a governance tag to a top-level table column via JSON Patch."""
+        table = self._get(f"/api/v1/tables/{table_id}")
+        columns = table.get("columns", []) or []
+
+        target_index: Optional[int] = None
+        target_column: Optional[Dict[str, Any]] = None
+        for idx, column in enumerate(columns):
+            if column.get("name") == column_name:
+                target_index = idx
+                target_column = column
+                break
+
+        if target_index is None or target_column is None:
+            raise OpenMetadataClientError(
+                message=f"Column '{column_name}' was not found in table '{table_id}'.",
+                hint="Use an exact top-level column name from get_table_details output.",
+            )
+
+        existing_tags = target_column.get("tags", []) or []
+        existing_tag_fqns = {
+            tag.get("tagFQN") or tag.get("name")
+            for tag in existing_tags
+            if tag.get("tagFQN") or tag.get("name")
+        }
+        if tag_fqn in existing_tag_fqns:
+            return {
+                "status": "no_op",
+                "message": f"Tag '{tag_fqn}' is already present on column '{column_name}'.",
+                "table_id": table_id,
+                "column_name": column_name,
+                "tag_fqn": tag_fqn,
+            }
+
+        if isinstance(target_column.get("tags"), list):
+            patch_payload = [
+                {
+                    "op": "add",
+                    "path": f"/columns/{target_index}/tags/-",
+                    "value": {"tagFQN": tag_fqn},
+                }
+            ]
+        else:
+            patch_payload = [
+                {
+                    "op": "add",
+                    "path": f"/columns/{target_index}/tags",
+                    "value": [{"tagFQN": tag_fqn}],
+                }
+            ]
+
+        self._patch(f"/api/v1/tables/{table_id}", patch_payload)
+        return {
+            "status": "updated",
+            "message": f"Applied tag '{tag_fqn}' to column '{column_name}'.",
+            "table_id": table_id,
+            "column_name": column_name,
+            "tag_fqn": tag_fqn,
         }

@@ -7,6 +7,14 @@ Minimal MCP server for hackathon use-cases that lets LLM agents discover data as
 - `search_data_assets`: Search table/data assets by natural language or keyword.
 - `get_table_details`: Fetch table metadata including schema, tags, and owner.
 - `get_table_lineage`: Fetch upstream/downstream dependencies for a table.
+- `analyze_table_for_pii`: Provide governance-focused schema context for LLM PII audit reasoning.
+- `apply_pii_tag_to_column`: Apply a governance tag to a table column for automated remediation.
+
+## Autonomous Agentic Governance Workflow
+
+- Step 1: Search & Discover (`search_data_assets`, `get_table_details`)
+- Step 2: Audit & Reason (`analyze_table_for_pii`)
+- Step 3: Act & Remediate (`apply_pii_tag_to_column`)
 
 ## Prerequisites
 
