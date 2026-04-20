@@ -61,6 +61,66 @@ Audit, Document & Remediate: Automatically suggest descriptions for undocumented
 mcp run server.py
 ```
 
+## Connecting to Claude Desktop
+
+To use this MCP server from Claude Desktop, add it to your `claude_desktop_config.json`.
+
+On macOS, this file is typically located at:
+
+```text
+~/Library/Application Support/Claude/claude_desktop_config.json
+```
+
+Use the following config (replace `/absolute/path/to/server.py`):
+
+```json
+{
+  "mcpServers": {
+    "openmetadata": {
+      "command": "uv",
+      "args": [
+        "run",
+        "mcp",
+        "run",
+        "/absolute/path/to/server.py"
+      ],
+      "env": {
+        "OPENMETADATA_HOST": "http://localhost:8585",
+        "OPENMETADATA_JWT_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+If `uv` is not installed, you can use Python directly:
+
+```json
+{
+  "mcpServers": {
+    "openmetadata": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "mcp",
+        "run",
+        "/absolute/path/to/server.py"
+      ],
+      "env": {
+        "OPENMETADATA_HOST": "http://localhost:8585",
+        "OPENMETADATA_JWT_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+### Demo Prompts for Judges
+
+- "Find candidate customer-related tables. Analyze them for likely untagged PII, verify available governance tags, and apply the most appropriate tag to any missing sensitive column."
+- "Review one ecommerce table for undocumented columns. Propose concise descriptions and update the missing ones automatically."
+- "Run a full governance pass: discover relevant tables, audit for missing PII tags and descriptions, check valid tag FQNs first, then remediate what you can."
+
 ## Tool Intents
 
 - `search_data_assets(query, limit=10)`
