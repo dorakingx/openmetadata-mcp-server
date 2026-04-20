@@ -112,5 +112,36 @@ def get_table_lineage(identifier: str) -> Dict[str, Any]:
         return _error_payload(err)
 
 
+@mcp.tool()
+def analyze_table_for_pii(identifier: str) -> Dict[str, Any]:
+    """
+    Fetch focused governance context so the LLM can audit untagged PII.
+
+    Args:
+        identifier: Table fully qualified name (preferred) or table UUID.
+    """
+    if not identifier.strip():
+        return {
+            "ok": False,
+            "error": "identifier must not be empty.",
+            "hint": "Provide a table FQN (recommended) or UUID.",
+            "status_code": None,
+        }
+
+    try:
+        context = _get_client().get_table_governance_context(identifier=identifier.strip())
+        return {
+            "ok": True,
+            "instruction": (
+                "Review the following columns. If any column likely contains PII "
+                "(like emails, phone numbers, or addresses) but lacks a 'PII' tag, "
+                "please suggest adding it."
+            ),
+            "governance_context": context,
+        }
+    except OpenMetadataClientError as err:
+        return _error_payload(err)
+
+
 if __name__ == "__main__":
     mcp.run()

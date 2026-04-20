@@ -256,3 +256,32 @@ class OpenMetadataClient:
             "upstream_count": len(upstream),
             "downstream_count": len(downstream),
         }
+
+    def get_table_governance_context(self, identifier: str) -> Dict[str, Any]:
+        """Return minimal schema context for LLM governance checks."""
+        table = self._resolve_table(identifier)
+        columns = table.get("columns", []) or []
+
+        governance_columns = [
+            {
+                "name": col.get("name"),
+                "data_type": col.get("dataType"),
+                "description": col.get("description") or "",
+                "tags": [
+                    tag.get("tagFQN") or tag.get("name")
+                    for tag in (col.get("tags", []) or [])
+                    if tag.get("tagFQN") or tag.get("name")
+                ],
+            }
+            for col in columns
+        ]
+
+        return {
+            "table": {
+                "id": table.get("id"),
+                "fqn": table.get("fullyQualifiedName"),
+                "name": table.get("name"),
+            },
+            "columns": governance_columns,
+            "column_count": len(governance_columns),
+        }
