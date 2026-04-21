@@ -88,6 +88,32 @@ Use the following configuration:
 }
 ```
 
+Template content reference (copy/paste this block into your `claude_desktop_config.json` as-is, then edit values):
+
+```json
+{
+  "mcpServers": {
+    "openmetadata": {
+      "command": "uv",
+      "args": [
+        "run",
+        "mcp",
+        "run",
+        "/ABSOLUTE/PATH/TO/YOUR/openmetadata-mcp-server/server.py"
+      ],
+      "env": {
+        "OPENMETADATA_HOST": "http://localhost:8585",
+        "OPENMETADATA_JWT_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+Only replace these values in your own Claude Desktop config:
+- `OPENMETADATA_JWT_TOKEN`
+- the `args` server path if your project location is different
+
 ### Demo Prompts for Judges
 
 - Basic Discovery: "Search for tables related to 'users' or 'customers' in OpenMetadata. Please analyze their columns and let me know if there is any Personally Identifiable Information (PII) that is currently missing a governance tag."
