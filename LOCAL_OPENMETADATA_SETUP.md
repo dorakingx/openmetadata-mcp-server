@@ -26,7 +26,7 @@ docker compose up -d
 - During boot, MySQL, Elasticsearch, and OpenMetadata web services initialize.
 - OpenMetadata UI: `http://localhost:8585`
 - Default credentials:
-  - Email: `admin@open-metadata.org`
+  - Email: `admin@openmetadata.org` (not `open-metadata`; must match the catalog user)
   - Password: `admin`
 
 ## Sample data + token for MCP demo

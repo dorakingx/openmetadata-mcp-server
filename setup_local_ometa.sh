@@ -28,7 +28,7 @@ Boot usually takes 3-5 minutes while MySQL, Elasticsearch, and the web service i
 
 UI: http://localhost:8585
 Default login:
-  - Email: admin@open-metadata.org
+  - Email: admin@openmetadata.org
   - Password: admin
 
 When sample data appears, get your ingestion bot JWT token:
